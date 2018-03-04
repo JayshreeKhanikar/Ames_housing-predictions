@@ -1,50 +1,48 @@
 ![](http://rentinginla.com/wp-content/uploads/2015/12/Buying.jpg)
-# [Project 2: Predicting House Prices with Advanced Regression Techniques](https://www.kaggle.com/c/house-prices-advanced-regression-techniques/data)
+# Predicting House Prices with Advanced Regression Techniques
 
-The goal of this project is for you to use EDA, visualization, data cleaning, preprocesing, and linear models to predict home prices given the features of the home, and interpret your linear models to find out what features add value to a home! This project is a bit more open-ended than project 1. 
+The goal of this project is to predict home prices given the features of the home, and interpret the models to find out what features add value to a home! The dataset for this project was taken from Kaggle Ames housing price Prediction competition https://www.kaggle.com/c/house-prices-advanced-regression-techniques/data
 
-Be sure to ...
+Buying a house for any average person is a major decision in his/her life and a lot of factors contribute to the pricetag for a dream house.  Intuitively even before performing machine learning, one could predict that neighborhood (being close to school, highway, shopping centers), kitchen quality and overall quality of house are major influence.
 
-* Think about your choices when it comes to your choices about the data. Be ready to defend your decisions!
-* Use lots of plots to dig deeper into the data! Describe the plots and convey what you learned from them.
-* Don't forget to read the [description of the data](https://storage.googleapis.com/kaggle-competitions-data/kaggle/5407/data_description.txt?GoogleAccessId=competitions-data@kaggle-161607.iam.gserviceaccount.com&Expires=1507575962&Signature=HUgKXCr3TOJMcb%2BGgbwFR4HGS7joOdSr0aO49X4453i2Y4LPFC2imccd%2BS2bzYMtUOqZSRW%2FNOGTwv5hI07%2FvXdFrgnnlyMz1l548aLi0Otg0jzIa11YXymXX4801QaoQmhMJV6ko0ycMJx5y00zSn8lOFNxVARz3aNNl6L8GKkodLITzAy72uPyCXS1iMuPFbmxdVbhYaO6OiKYh%2BDx%2Ftf2z9w3KSm5OGZacRcoxuYCnpZL6PpbG67hzaF21Vh9%2FV%2BrgEoEI0cL%2BKvwIUo5GcTGu0jmsixFx5JyHFZba6l5gDNRlT%2BIHEpjFAtHHrMEdTSzzlWSR2cEqig5WBsmXg%3D%3D) at the kaggle website! This has valuable information that will help you clean and impute data. `NaN` means something in many of the columns! Don't just drop or fill them!
-* Try fitting many models! Document your work and note what you've tried.
-* Apply what you've learned in class, books, videos, and blog posts.
+This dataset contains detailed information about houses in Ames, Iowa from 2006 to 2012, covering square footage, neighborhood, number of bedrooms, bathrooms and exterior materials. Preliminary examination of the dataset shows there are heterogeneous features with a mix of ordinal, continuous and nominal attributes. 
+* Continuous features contain area information such as size of lot, bedroom, kitchen and basement. 
+* Nominal features describe types of exterior and garage material, neighborhood and sale type while 
+* Ordinal features describe quality and condition of house, garage, basement and material. 
+* In addition many of the features contain null values which have to be handles before feeding the dataset to machine learning models. 
+
+## Reading Data
+I read the data with pd.read_csv method with 'keep_default_na' = False parameter, which does not automatically convert "NA" values to np.nan. I employed this strategy to separate the mislabelled data from missing data. Many of the features have mislabelled data where "NA" simply meant "no_feature" instead of data not available. These mislabelled data have to be changed manually into correct labels and should not be considered during data imputation. There are 12 such mislabelled features.
+
+## Data exploration, data imputation and feature engineering:
+
+I set out to perform in depth EDA due to the above mentioned charater of this dataset. A good analyst will always understand data well before fitting predictive models, because feeding dirty data into a model will never give a satisfactory result. 
+
+1) Any feature that was more than 95% empty, I discarded it as there is simply not enough information available to fill in missing values. These features probabaly have no predictive power. I deleted 7 such features
+2) 3 features had wrong datatype. I felt 'MoSold' and ' YrSold' should be string type as numerically they can not be used in meaningful calculations.
+3) For features with numeric data types, I imputated missing values with median as data is highly skewed (we will see that through distribution) and for categorial type features I used the most common value to impute missing values.
+4) I converted ordinal features into numeric labels as their order have values have some inherent order. 
+5) I combined very closely related feature into one super feature, combining (Basement quality, basement condition), (overall quality, overall condition) and (open porch, screen porch and enclosed porch area)
+
+ 
+## Examining prediction values: SalePrice:
+it is important to examine the predictions by understanding its distribution and what pattern does it follow. SalePrice is righ skewed, with majority of houses around $150,000 pricetage whereas very small number of houses are above $450,000. Extreme expensive houses can be considered outliers and removed as keeping them inside model will pull our prediction towards higher end and reduce accuracy. I am going to log transform SalePrice to remove skew before removing the outliers. I followed Tukey's rule to determine outliers and found 5 such datapoints.
+
+#### Understanding distribution of features and their relationship with SalePrice
+I created heatmap of correlation matrix using seaborn, python visaulization package. The heatmap clearly indicates that few features have really high correlation, upto 0.8. I decided to keep only one of these features as I want to minimize redundancy in data.
+
+Upon creating scatterplot of numerical features with SalePrice, features like, OverallQual, KitchenQual, GarageArea, LotFrontage and GrLivArea has high high correlation. I expect some of these features to show up in my model. 
+
+Distribution of numeric feature showed lot of right skew. Many machine learning linear model require input data to be normally distributed, hence I log transformed numeric feature to remove skew and reduce outliers.
+
+## Linear models for building predictions:
+As it is regression problem, I started out with Linear REgression to fit the datapoints. I used 2 metrices, R2 score and mean_squared_error to understang teh performance of linear model.
+
+As expected regularised models Lasso (with L1 penalty score) and ElasticNet (with both L1 and L2 penalty) were superior to simple linear regression. Regularization tends to make coefficients of certain features as zero and reducing their predictive power. As we already know that this dataset had lot of collinear features, regularization is definitely our friend.
+
+Absolute measure of coefficients given by these models shed light on features that are really important. 
+
+I also used DecisionTreeRegressor which provide feature importances. Finally GrLivArea, OverallQual and Neighborhood were picked up by my models to be most predictive of the SalePrice
 
 
-From the Kaggle competition website:
-
-    Ask a home buyer to describe their dream house, and they probably won't begin with the height of the basement ceiling or the proximity to an east-west railroad. But this playground competition's dataset proves that much more influences price negotiations than the number of bedrooms or a white-picket fence.
-
-    With 79 explanatory variables describing (almost) every aspect of residential homes in Ames, Iowa, this competition challenges you to predict the final price of each home.
-    
-
-## Project Details:
-
-#### Submission:
-
-* Assigned: Tuesday, 10/10/2017
-* Project Due Date: Friday, 10/20/2017 (Submission form [here](https://goo.gl/forms/HJhO3VLMByrHHZWJ2))
-* Self-Evaluation Due Date: Sunday, 10/22/2017 (Submission form [here](https://goo.gl/forms/b62WzAYbTQIqyPsB3))
-
-#### Working on the Project:
-
-* You should be working on a **fork** of the GA project one repository. 
-* Use **git** to manage versions of your project. Make sure to `add`, `commit`, and `push` your changes to **your fork** of the github 
-
-
-## Considerations:
-
-* You will be generating long data strutures- avoid displaying the whole thing. Display just the first or last few entries and look at the length or shape to check whether your code gives you back what you want and expect.
-* Make functions whenever possiblle!
-* Be explicit with your naming. You may forget what `this_list` is, but you will have an idea of what `passenger_fare_list` is. Variable naming will help you in the long run!
-* Don't forget about tab autocomplete!
-* Use markdown cells to document your planning, thoughts, and results. 
-* Delete cells you will not include in your final submission
-* Try to solve your own problems using this framework:
-  1. Check your spelling
-  2. Google your errors. Is it on stackoverflow?
-  3. Ask your classmates
-  4. Ask a TA or instructor
-* Do not include errors or stack traces (fix them!)
 
